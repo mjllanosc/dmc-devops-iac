@@ -2,6 +2,8 @@
 
 Este repositorio contiene una solución completa de arquitectura cloud serverless que incluye un microservicio backend, un frontend estático y configuración de infraestructura como código (IaC) usando Terraform.
 
+**Versión: 1.0**
+
 ## 📁 Estructura del Repositorio
 
 ```
@@ -336,6 +338,52 @@ Para inyectar la variable `KEYVAULT_VALUE` desde Azure Key Vault:
 - ⚠️ `allow_insecure_connections = true` en Terraform permite HTTP (cambiar a HTTPS en producción)
 
 ---
+
+## 🔐 Integración de Key Vault, identidad y storage (según estructura actual)
+
+En la versión 1.0 la infraestructura incluye soporte para secretos y almacenamiento según la estructura descrita arriba:
+
+- `azurerm_user_assigned_identity.identity_01`: identidad asignada por usuario para que el backend pueda autenticar contra Key Vault.
+- `azurerm_key_vault.kv_01` y `azurerm_key_vault_secret.keyvault_secret`: Key Vault con el secreto `KEYVAULT-VALUE` (valor definido en `terraform.tfvars` o inyectado por CI/CD).
+- `azurerm_storage_account.st_01` y `azurerm_storage_share.share_01`: Storage Account y Azure Files para necesidades de almacenamiento.
+- El `azurerm_container_app.backend` está configurado con `identity { type = "UserAssigned" ... }` y la variable de entorno `KEYVAULT_VALUE` toma el valor del secreto.
+- `outputs.tf` expone `backend_fqdn`, `frontend_fqdn`, `keyvault_name`, `user_identity_id` y URLs útiles para pruebas.
+
+### Variables relacionadas (en `infrastructure/variables.tf`)
+- `identity_01_name`
+- `kv_01_name`
+- `kv_secret_value` (sensitive)
+
+Usa `terraform output` después del despliegue para obtener las URLs y los IDs necesarios para integración y pruebas.
+
+---
+
+## CI/CD — Diagrama del flujo (Mermaid)
+
+```mermaid
+flowchart LR
+  Dev["Developer: Push code to repo"] --> CI["CI Pipeline (build & test)"]
+  CI --> BuildBack["Build backend image"]
+  CI --> BuildFront["Build frontend image"]
+  BuildBack --> Push["Push images to Docker Hub"]
+  BuildFront --> Push
+  Push --> TF["Terraform (plan & apply) in CD"]
+  KeyVault["Azure Key Vault (secrets)"] --> TF
+  TF --> Deploy["Deploy Container Apps (frontend & backend)"]
+  Deploy --> Monitor["Monitoring & Logs"]
+  Monitor --> Dev
+```
+
+Descripción del flujo:
+
+- El desarrollador hace push al repositorio.
+- El pipeline CI construye las imágenes del backend y frontend y ejecuta pruebas.
+- Las imágenes se publican en Docker Hub.
+- El pipeline CD ejecuta `terraform plan` y `terraform apply`, usando las imágenes publicadas y leyendo secretos desde Key Vault cuando procede.
+- Terraform despliega/actualiza los Azure Container Apps con la Managed Identity ligada al backend y con `BACKEND_URL` inyectado al frontend.
+- Monitorización y logs permiten cerrar el ciclo y notificar al desarrollador.
+
+
 
 ## 👤 Autor
 
