@@ -20,7 +20,7 @@ share_01_name = "share-mjllanos-eastus2-001"
 
 // Container App Images
 backend_image  = "docker.io/mjllanosc/app-back-saludo-01:v1.0"
-frontend_image = "docker.io/mjllanosc/app-front-saludo-01:v1.0"
+frontend_image = "docker.io/mjllanosc/app-front-saludo-01:v1.2"
 
 
 //identity
