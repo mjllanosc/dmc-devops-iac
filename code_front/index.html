@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Microservicio Cloud</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="config.js"></script>
+</head>
+<body>
+    <div class="container">
+        <h1>Despliegue Escalable de un Microservicio en una arquitectura Cloud aprovisionada con terraform</h1>
+
+        <div class="content">
+            <div class="left-section">
+                <div class="subtitle-box">
+                    <h2>Servicio de Saludo</h2>
+                    <p id="saludoText">Cargando...<span class="loading"></span></p>
+                </div>
+
+                <div class="button-group">
+                    <button onclick="obtenerSecreto()">Mostrar secreto</button>
+                </div>
+            </div>
+
+            <div class="right-section">
+                <div class="output-box">
+                    <h3>Salida</h3>
+                    <div class="output-content" id="outputContent">
+                        Aquí se mostrará la respuesta
+                    </div>
+                </div>
+            </div>
+        </div>
+        <footer class="footer">
+        <p>by Merwin Johel Llanos Cueva <span class="handle">@mjllanosc</span></p>
+    </footer>
+    </div>
+
+    <script>
+        // Get API URL from dynamic configuration
+        const API_BASE_URL = window.apiConfig?.apiBaseUrl || 'http://localhost:8080';
+
+        // Cargar saludo al iniciar
+        document.addEventListener('DOMContentLoaded', function() {
+            obtenerSaludo();
+        });
+
+        async function obtenerSaludo() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/saludo`);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.text();
+                document.getElementById('saludoText').innerHTML = data;
+            } catch (error) {
+                document.getElementById('saludoText').innerHTML = `<span style="color: #d32f2f;">Error al cargar: ${error.message}</span>`;
+                console.error('Error:', error);
+            }
+        }
+
+        async function obtenerSecreto() {
+            const outputDiv = document.getElementById('outputContent');
+            const button = event.target;
+
+            // Deshabilitar botón mientras se carga
+            button.disabled = true;
+            button.textContent = 'Cargando...';
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/mostrar_secreto`);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.text();
+                
+                outputDiv.classList.add('filled', 'success');
+                outputDiv.classList.remove('error');
+                outputDiv.textContent = data;
+            } catch (error) {
+                outputDiv.classList.add('filled', 'error');
+                outputDiv.classList.remove('success');
+                outputDiv.textContent = `Error: ${error.message}\n\nAsegúrate de que el servidor está corriendo en ${API_BASE_URL}`;
+                console.error('Error:', error);
+            } finally {
+                // Reabilitar botón
+                button.disabled = false;
+                button.textContent = 'Mostrar secreto';
+            }
+        }
+    </script>   
+</body>
+ 
+</html>

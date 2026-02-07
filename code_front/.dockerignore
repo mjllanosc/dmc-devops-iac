@@ -1,0 +1,22 @@
+# Ignore VCS and local files
+.git
+.gitignore
+.vscode/
+.idea/
+
+# Ignore build and temp artifacts
+node_modules/
+dist/
+target/
+*.jar
+
+# Local env and docs
+.env
+*.md
+README.md
+Dockerfile
+
+# OS files
+Thumbs.db
+ehthumbs.db
+Desktop.ini
